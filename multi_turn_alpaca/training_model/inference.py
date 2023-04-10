@@ -1,5 +1,6 @@
 import os
 import sys
+import random
 
 import fire
 import gradio as gr
@@ -22,6 +23,18 @@ try:
         device = "mps"
 except:  # noqa: E722
     pass
+
+# key: user id, value: conversation history
+user_history = {}
+
+
+def add_line_separators(history):
+    """
+
+    :param history:
+    :return:
+    """
+    return history
 
 
 def main(
@@ -69,8 +82,23 @@ def main(
         temperature=0.1,
         top_p=0.75,
         top_k=40,
+        is_clean_history=False,
+        user_id=0,
         **kwargs,
     ):
+        current_utterance = 'user: {instruction} assistant: '.format(instruction=instruction)
+        if is_clean_history:
+            if user_id in user_history:
+                user_history.pop(user_id)
+            history = ''
+        else:
+            if user_id in user_history:
+                history = user_history[user_id] + ' '
+            else:
+                history = ''
+        instruction = history + current_utterance
+
+
         prompt = prompter.generate_prompt(instruction, input)
         inputs = tokenizer(prompt, return_tensors="pt")
         input_ids = inputs["input_ids"].to(device)
@@ -92,7 +120,8 @@ def main(
             )
         s = generation_output.sequences[0]
         output = tokenizer.decode(s)
-        return prompter.get_response(output)
+        user_history[user_id] = instruction + prompter.get_response(output)
+        return add_line_separators(instruction), prompter.get_response(output)
 
     gr.Interface(
         fn=evaluate,
@@ -119,35 +148,25 @@ def main(
             gr.components.Slider(
                 minimum=0, maximum=100, step=1, value=40, label="Top k"
             ),
+            gr.components.Checkbox(value=False, label='Clean history'),
+            gr.components.Slider(
+                minimum=0, maximum=40000000, step=1, value=random.randint(0, 40000000), label="User ID"
+            ),
         ],
         outputs=[
+            gr.inputs.Textbox(
+                lines=5,
+                label="History",
+            ),
             gr.inputs.Textbox(
                 lines=5,
                 label="Output",
             )
         ],
-        title="🦙🌲 Alpaca-LoRA",
-        description="Alpaca-LoRA is a 7B-parameter LLaMA model finetuned to follow instructions. It is trained on the [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) dataset and makes use of the Huggingface LLaMA implementation. For more information, please visit [the project's website](https://github.com/tloen/alpaca-lora).",  # noqa: E501
+        title="Multi-turn Alpaca",
+        description="Multi-turn Alpaca",  # noqa: E501
     ).launch(server_name=server_name, share=share_gradio)
     # Old testing code follows.
-
-    """
-    # testing code for readme
-    for instruction in [
-        "Tell me about alpacas.",
-        "Tell me about the president of Mexico in 2019.",
-        "Tell me about the king of France in 2019.",
-        "List all Canadian provinces in alphabetical order.",
-        "Write a Python program that prints the first 10 Fibonacci numbers.",
-        "Write a program that prints the numbers from 1 to 100. But for multiples of three print 'Fizz' instead of the number and for the multiples of five print 'Buzz'. For numbers which are multiples of both three and five print 'FizzBuzz'.",  # noqa: E501
-        "Tell me five words that rhyme with 'shock'.",
-        "Translate the sentence 'I have no mouth but I must scream' into Spanish.",
-        "Count up from 1 to 500.",
-    ]:
-        print("Instruction:", instruction)
-        print("Response:", evaluate(instruction))
-        print()
-    """
 
 
 if __name__ == "__main__":

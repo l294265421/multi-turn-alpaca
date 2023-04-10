@@ -34,14 +34,32 @@ def add_line_separators(history: str):
     :param history:
     :return:
     """
-    return history
+    if not history:
+        return ''
+    utterances = []
+    user = 'user: '
+    assistant = 'assistant: '
+    current_role = assistant
+    end = history.find(current_role)
+    while end != -1:
+        utterance = history[: end]
+        utterances.append(utterance)
+        history = history[end:]
+        if current_role == user:
+            current_role = assistant
+        else:
+            current_role = user
+        end = history.find(current_role)
+    utterances.append(history)
+    result = '\n'.join(utterances)
+    return result
 
 
 def main(
     load_8bit: bool = False,
     base_model: str = "decapoda-research/llama-7b-hf",
     lora_weights: str = "./multi-turn-alpaca",
-    prompt_template: str = "",  # The prompt template to use, will default to alpaca.
+    prompt_template: str = "multi_turn",  # The prompt template to use, will default to alpaca.
     server_name: str = "0.0.0.0",  # Allows to listen on all interfaces by providing '0.
     share_gradio: bool = True,
 ):
@@ -55,16 +73,16 @@ def main(
         torch_dtype=torch.float16,
         device_map="auto",
     )
-    model = PeftModel.from_pretrained(
-        model,
-        lora_weights,
-        torch_dtype=torch.float16,
-    )
+    # model = PeftModel.from_pretrained(
+    #     model,
+    #     lora_weights,
+    #     torch_dtype=torch.float16,
+    # )
 
     # unwind broken decapoda-research config
-    model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
-    model.config.bos_token_id = 1
-    model.config.eos_token_id = 2
+    # model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
+    # model.config.bos_token_id = 1
+    # model.config.eos_token_id = 2
 
     if not load_8bit:
         model.half()  # seems to fix bugs for some users.
@@ -75,17 +93,18 @@ def main(
 
     def evaluate(
         instruction,
-        input=None,
+        # input=None,
         max_new_tokens=512,
         num_beams=4,
         do_sample=False,
         temperature=0.1,
         top_p=0.75,
         top_k=40,
-        is_clean_history=False,
         user_id=0,
+        is_clean_history=False,
         **kwargs,
     ):
+        print('user id: %s' % user_id)
         current_utterance = 'user: {instruction} assistant: '.format(instruction=instruction)
         if is_clean_history:
             if user_id in user_history:
@@ -98,8 +117,8 @@ def main(
                 history = ''
         instruction = history + current_utterance
 
-
-        prompt = prompter.generate_prompt(instruction, input)
+        prompt = prompter.generate_prompt(instruction)
+        print('prompt:' + prompt)
         inputs = tokenizer(prompt, return_tensors="pt")
         input_ids = inputs["input_ids"].to(device)
         generation_config = GenerationConfig(
@@ -120,8 +139,22 @@ def main(
             )
         s = generation_output.sequences[0]
         output = tokenizer.decode(s)
-        user_history[user_id] = instruction + prompter.get_response(output)
-        return add_line_separators(instruction), prompter.get_response(output)
+        print('output: ' + output)
+        response = output[len(prompt):]
+        user_history[user_id] = instruction + response
+        return add_line_separators(instruction), response
+
+    # while True:
+    #     print()
+    #     instruction = input("Instruction: ")
+    #     if instruction == 'quit':
+    #         break
+    #
+    #     result = evaluate(instruction, max_new_tokens=8)
+    #     print('history:')
+    #     print(result[0])
+    #     print('response:')
+    #     print(result[1])
 
     gr.Interface(
         fn=evaluate,
@@ -131,7 +164,7 @@ def main(
                 label="Instruction",
                 placeholder="Tell me about alpacas.",
             ),
-            gr.components.Textbox(lines=2, label="Input", placeholder="none"),
+            # gr.components.Textbox(lines=2, label="Input", placeholder="none"),
             gr.components.Slider(
                 minimum=1, maximum=2000, step=1, value=128, label="Max tokens"
             ),
@@ -148,25 +181,24 @@ def main(
             gr.components.Slider(
                 minimum=0, maximum=100, step=1, value=40, label="Top k"
             ),
-            gr.components.Checkbox(value=False, label='Clean history'),
             gr.components.Slider(
                 minimum=0, maximum=40000000, step=1, value=random.randint(0, 40000000), label="User ID"
             ),
+            gr.components.Checkbox(value=False, label='Clean history'),
         ],
         outputs=[
             gr.inputs.Textbox(
-                lines=5,
+                lines=21,
                 label="History",
             ),
             gr.inputs.Textbox(
-                lines=5,
+                lines=3,
                 label="Output",
             )
         ],
         title="Multi-turn Alpaca",
-        description="Multi-turn Alpaca",  # noqa: E501
+        description="GitHub: https://github.com/l294265421/multi-turn-alpaca",  # noqa: E501
     ).launch(server_name=server_name, share=share_gradio)
-    # Old testing code follows.
 
 
 if __name__ == "__main__":

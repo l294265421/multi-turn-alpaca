@@ -90,7 +90,7 @@ def train(
     train_on_inputs: bool = True,  # if False, masks out inputs in loss
     group_by_length: bool = False,  # faster, but produces an odd training loss curve
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
-    prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
+    prompt_template_name: str = "multi_turn",  # The prompt template to use, will default to alpaca.
 ):
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
     tokenizer.pad_token_id = (

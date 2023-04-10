@@ -13,6 +13,5 @@ Multi-turn alpaca is an extension of stanford alpaca and supports multi-turn dia
     - sh run.sh multi_turn_alpaca/training_model/inference.py
 
 ## Datasets
-- [stanford_alpaca](https://github.com/tatsu-lab/stanford_alpaca#fine-tuning)
 - [ChatAlpaca](https://github.com/cascip/ChatAlpaca)
 - [AlpacaDataCleaned](https://github.com/gururise/AlpacaDataCleaned)

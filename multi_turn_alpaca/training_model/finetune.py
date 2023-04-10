@@ -75,8 +75,8 @@ def train(
     data_path: str = os.path.join(common_path.data_dir, 'training_data', 'training_data.txt'),
     output_dir: str = "./multi-turn-alpaca",
     # training hyperparams
-    batch_size: int = 128,
-    micro_batch_size: int = 16,
+    batch_size: int = 192,
+    micro_batch_size: int = 24,
     num_epochs: int = 1,
     learning_rate: float = 3e-4,
     cutoff_len: int = 1024,

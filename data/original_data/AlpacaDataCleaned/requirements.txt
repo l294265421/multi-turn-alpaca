@@ -1,0 +1,7 @@
+black
+isort
+openai
+gradio
+rouge_score
+setfit
+pandas

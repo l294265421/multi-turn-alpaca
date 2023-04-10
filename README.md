@@ -1,2 +1,18 @@
 # multi-turn-alpaca
-multi-turn alpaca
+Multi-turn alpaca is an extension of stanford alpaca and supports multi-turn dialogue.
+
+## Prapare Data
+- [process_alpaca_data_cleaned](multi_turn_alpaca/prepare_data/process_alpaca_data_cleaned.py)
+- [process_chat_alpaca](multi_turn_alpaca/prepare_data/process_chat_alpaca.py)
+- [merge_data](multi_turn_alpaca/prepare_data/merge_data.py)
+
+## Training Model
+- unzip data/training_data/training_data.txt.zip
+
+- [filetune](chat_sentiment_analysis/llama/finetune.py)
+  - nohup sh run.sh multi_turn_alpaca/training_model/finetune.py > finetune.log 2>&1 &
+
+## Datasets
+- [stanford_alpaca](https://github.com/tatsu-lab/stanford_alpaca#fine-tuning)
+- [ChatAlpaca](https://github.com/cascip/ChatAlpaca)
+- [AlpacaDataCleaned](https://github.com/gururise/AlpacaDataCleaned)

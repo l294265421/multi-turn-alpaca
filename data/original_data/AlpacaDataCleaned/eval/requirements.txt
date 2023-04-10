@@ -1,0 +1,9 @@
+appdirs
+loralib
+bitsandbytes
+datasets
+evaluate
+sentencepiece
+Levenshtein
+git+https://github.com/huggingface/peft.git
+git+https://github.com/huggingface/transformers.git

@@ -28,7 +28,7 @@ except:  # noqa: E722
 user_history = {}
 
 
-def add_line_separators(history):
+def add_line_separators(history: str):
     """
 
     :param history:

@@ -15,7 +15,8 @@ from peft import get_peft_model
 from peft import get_peft_model_state_dict
 from peft import prepare_model_for_int8_training
 from peft import set_peft_model_state_dict
-from transformers import LlamaForCausalLM, LlamaTokenizer
+from transformers import LlamaForCausalLM
+from transformers import LlamaTokenizer
 
 from multi_turn_alpaca.utils.prompter import Prompter
 from multi_turn_alpaca.common import common_path

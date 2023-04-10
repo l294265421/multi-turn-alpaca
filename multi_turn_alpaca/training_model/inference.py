@@ -6,9 +6,11 @@ import gradio as gr
 import torch
 import transformers
 from peft import PeftModel
-from transformers import GenerationConfig, LlamaForCausalLM, LlamaTokenizer
+from transformers import GenerationConfig
+from transformers import LlamaForCausalLM
+from transformers import LlamaTokenizer
 
-from alpaca_lora.utils.prompter import Prompter
+from multi_turn_alpaca.utils.prompter import Prompter
 
 if torch.cuda.is_available():
     device = "cuda"
@@ -25,51 +27,26 @@ except:  # noqa: E722
 def main(
     load_8bit: bool = False,
     base_model: str = "decapoda-research/llama-7b-hf",
-    lora_weights: str = "./lora-alpaca",
+    lora_weights: str = "./multi-turn-alpaca",
     prompt_template: str = "",  # The prompt template to use, will default to alpaca.
     server_name: str = "0.0.0.0",  # Allows to listen on all interfaces by providing '0.
     share_gradio: bool = True,
 ):
-    base_model = base_model or os.environ.get("BASE_MODEL", "")
-    assert (
-        base_model
-    ), "Please specify a --base_model, e.g. --base_model='decapoda-research/llama-7b-hf'"
-
     prompter = Prompter(prompt_template)
+
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
-    if device == "cuda":
-        model = LlamaForCausalLM.from_pretrained(
-            base_model,
-            load_in_8bit=load_8bit,
-            torch_dtype=torch.float16,
-            device_map="auto",
-        )
-        model = PeftModel.from_pretrained(
-            model,
-            lora_weights,
-            torch_dtype=torch.float16,
-        )
-    elif device == "mps":
-        model = LlamaForCausalLM.from_pretrained(
-            base_model,
-            device_map={"": device},
-            torch_dtype=torch.float16,
-        )
-        model = PeftModel.from_pretrained(
-            model,
-            lora_weights,
-            device_map={"": device},
-            torch_dtype=torch.float16,
-        )
-    else:
-        model = LlamaForCausalLM.from_pretrained(
-            base_model, device_map={"": device}, low_cpu_mem_usage=True
-        )
-        model = PeftModel.from_pretrained(
-            model,
-            lora_weights,
-            device_map={"": device},
-        )
+
+    model = LlamaForCausalLM.from_pretrained(
+        base_model,
+        load_in_8bit=load_8bit,
+        torch_dtype=torch.float16,
+        device_map="auto",
+    )
+    model = PeftModel.from_pretrained(
+        model,
+        lora_weights,
+        torch_dtype=torch.float16,
+    )
 
     # unwind broken decapoda-research config
     model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
@@ -86,37 +63,32 @@ def main(
     def evaluate(
         instruction,
         input=None,
+        max_new_tokens=512,
+        num_beams=4,
+        do_sample=False,
         temperature=0.1,
         top_p=0.75,
         top_k=40,
-        num_beams=4,
-        max_new_tokens=512,
-        do_sample=False,
         **kwargs,
     ):
-        print('do_sample: %s' % str(do_sample))
         prompt = prompter.generate_prompt(instruction, input)
         inputs = tokenizer(prompt, return_tensors="pt")
         input_ids = inputs["input_ids"].to(device)
-        # https://huggingface.co/blog/how-to-generate
-        # https://huggingface.co/docs/transformers/generation_strategies
-        # https://medium.com/mlearning-ai/softmax-temperature-5492e4007f71
         generation_config = GenerationConfig(
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
+            max_new_tokens=max_new_tokens,
             num_beams=num_beams,
             do_sample=do_sample,
+            temperature=temperature,
+            top_p=top_p,
+            # top_k=top_k,
             **kwargs,
         )
         with torch.no_grad():
             generation_output = model.generate(
                 input_ids=input_ids,
-                # generation_config=generation_config,
+                generation_config=generation_config,
                 return_dict_in_generate=True,
                 output_scores=True,
-                max_new_tokens=max_new_tokens,
-                temperature=temperature
             )
         s = generation_output.sequences[0]
         output = tokenizer.decode(s)
@@ -132,6 +104,13 @@ def main(
             ),
             gr.components.Textbox(lines=2, label="Input", placeholder="none"),
             gr.components.Slider(
+                minimum=1, maximum=2000, step=1, value=128, label="Max tokens"
+            ),
+            gr.components.Slider(
+                minimum=1, maximum=4, step=1, value=4, label="Beams"
+            ),
+            gr.components.Checkbox(value=False, label='Do sample'),
+            gr.components.Slider(
                 minimum=0, maximum=1, value=0.1, label="Temperature"
             ),
             gr.components.Slider(
@@ -140,13 +119,6 @@ def main(
             gr.components.Slider(
                 minimum=0, maximum=100, step=1, value=40, label="Top k"
             ),
-            gr.components.Slider(
-                minimum=1, maximum=4, step=1, value=4, label="Beams"
-            ),
-            gr.components.Slider(
-                minimum=1, maximum=2000, step=1, value=128, label="Max tokens"
-            ),
-            gr.components.Checkbox(value=False, label='Do sample')
         ],
         outputs=[
             gr.inputs.Textbox(

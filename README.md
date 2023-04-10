@@ -7,9 +7,7 @@ Multi-turn alpaca is an extension of stanford alpaca and supports multi-turn dia
 - [merge_data](multi_turn_alpaca/prepare_data/merge_data.py)
 
 ## Training Model
-- unzip data/training_data/training_data.txt.zip
-
-- [filetune](chat_sentiment_analysis/llama/finetune.py)
+- [filetune](multi_turn_alpaca/training_model/finetune.py)
   - nohup sh run.sh multi_turn_alpaca/training_model/finetune.py > finetune.log 2>&1 &
 
 ## Datasets

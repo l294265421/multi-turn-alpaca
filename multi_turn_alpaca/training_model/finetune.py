@@ -10,25 +10,15 @@ import transformers
 from datasets import load_dataset
 from datasets import Dataset
 from datasets import DatasetDict
-
-from multi_turn_alpaca.common import common_path
-
-"""
-Unused imports:
-import torch.nn as nn
-import bitsandbytes as bnb
-"""
-
-from peft import (
-    LoraConfig,
-    get_peft_model,
-    get_peft_model_state_dict,
-    prepare_model_for_int8_training,
-    set_peft_model_state_dict,
-)
+from peft import LoraConfig
+from peft import get_peft_model
+from peft import get_peft_model_state_dict
+from peft import prepare_model_for_int8_training
+from peft import set_peft_model_state_dict
 from transformers import LlamaForCausalLM, LlamaTokenizer
 
 from multi_turn_alpaca.utils.prompter import Prompter
+from multi_turn_alpaca.common import common_path
 
 
 def tokenize(prompt, tokenizer, cutoff_len, add_eos_token=True):
@@ -85,11 +75,11 @@ def train(
     output_dir: str = "./multi-turn-alpaca",
     # training hyperparams
     batch_size: int = 128,
-    micro_batch_size: int = 8,
+    micro_batch_size: int = 16,
     num_epochs: int = 1,
     learning_rate: float = 3e-4,
     cutoff_len: int = 512,
-    val_set_size: int = 500,
+    val_set_size: int = 2000,
     # lora hyperparams
     lora_r: int = 16,
     lora_alpha: int = 16,
@@ -102,7 +92,6 @@ def train(
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
 ):
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
-
     tokenizer.pad_token_id = (
         0  # unk. we want this to be different from the eos token
     )

@@ -10,14 +10,11 @@ if __name__ == '__main__':
     data = file_utils.load_json(filepath)
     output_lines = []
     for i, instance in enumerate(data):
-        history = ''
-        for one_turn in instance:
-            role = one_turn['role']
-            content = one_turn['content']
-            history += ('{role}: '.format(role=role))
-            if role != 'user':
-                output_lines.append(json.dumps({'instruction': history, 'input': '', 'output': content}))
-            history += ('%s ' % content)
+        temp = ['%s: %s' % (e['role'], e['content']) for e in instance]
+        last_utterance_parts = temp[-1].split(' ')
+        history = ' '.join(temp[: len(temp) - 1]) + ' ' + last_utterance_parts[0]
+        output = instance[-1]['content']
+        output_lines.append(json.dumps({'instruction': history, 'input': '', 'output': output}))
 
     output_dir = os.path.join(common_path.data_dir, 'training_data')
     output_filepath = os.path.join(output_dir, 'chat_alpaca.txt')

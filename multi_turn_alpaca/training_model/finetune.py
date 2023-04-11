@@ -82,8 +82,8 @@ def train(
     cutoff_len: int = 1024,
     val_set_size: int = 2000,
     # lora hyperparams
-    lora_r: int = 16,
-    lora_alpha: int = 16,
+    lora_r: int = 8,
+    lora_alpha: int = 8,
     lora_dropout: float = 0.05,
     lora_target_modules: List[str] = ['q_proj', 'k_proj'],
     # llm hyperparams

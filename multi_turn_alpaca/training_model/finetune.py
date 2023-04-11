@@ -75,8 +75,8 @@ def train(
     data_path: str = os.path.join(common_path.data_dir, 'training_data', 'training_data.txt'),
     output_dir: str = "./multi-turn-alpaca",
     # training hyperparams
-    batch_size: int = 192,
-    micro_batch_size: int = 24,
+    batch_size: int = 128,
+    micro_batch_size: int = 16,
     num_epochs: int = 1,
     learning_rate: float = 3e-4,
     cutoff_len: int = 1024,
@@ -87,7 +87,7 @@ def train(
     lora_dropout: float = 0.05,
     lora_target_modules: List[str] = ['q_proj', 'k_proj'],
     # llm hyperparams
-    train_on_inputs: bool = True,  # if False, masks out inputs in loss
+    train_on_inputs: bool = False,  # if False, masks out inputs in loss
     group_by_length: bool = False,  # faster, but produces an odd training loss curve
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "multi_turn",  # The prompt template to use, will default to alpaca.

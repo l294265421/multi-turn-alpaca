@@ -1,10 +1,57 @@
-from transformers import AutoModel, AutoTokenizer
+import os
+import sys
+import random
+
+import fire
 import gradio as gr
+import torch
+import transformers
+from peft import PeftModel
+from transformers import GenerationConfig
+from transformers import LlamaForCausalLM
+from transformers import LlamaTokenizer
 import mdtex2html
 
-# tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True)
-# model = AutoModel.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True).half().cuda()
-# model = model.eval()
+from multi_turn_alpaca.utils.prompter import Prompter
+
+if torch.cuda.is_available():
+    device = "cuda"
+else:
+    device = "cpu"
+
+load_8bit: bool = False
+base_model: str = "decapoda-research/llama-7b-hf"
+lora_weights: str = "./multi-turn-alpaca"
+prompt_template: str = "multi_turn"  # The prompt template to use, will default to alpaca.
+
+
+prompter = Prompter(prompt_template)
+
+tokenizer = LlamaTokenizer.from_pretrained(base_model)
+
+model = LlamaForCausalLM.from_pretrained(
+    base_model,
+    load_in_8bit=load_8bit,
+    torch_dtype=torch.float16,
+    device_map="auto",
+)
+model = PeftModel.from_pretrained(
+    model,
+    lora_weights,
+    torch_dtype=torch.float16,
+)
+
+# unwind broken decapoda-research config
+model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
+model.config.bos_token_id = 1
+model.config.eos_token_id = 2
+
+if not load_8bit:
+    model.half()  # seems to fix bugs for some users.
+
+model.eval()
+if torch.__version__ >= "2" and sys.platform != "win32":
+    model = torch.compile(model)
 
 """Override Chatbot.postprocess"""
 
@@ -56,13 +103,36 @@ def parse_text(text):
     return text
 
 
-def predict(input, chatbot, max_length, top_p, temperature, history):
-    chatbot.append((parse_text(input), ""))
-    # for response, history in model.stream_chat(tokenizer, input, history, max_length=max_length, top_p=top_p,
-    #                                            temperature=temperature):
-    #     chatbot[-1] = (parse_text(input), parse_text(response))
-    #
-    #     yield chatbot, history
+def predict(input, chatbot, max_new_tokens, num_beams, do_sample, temperature, top_p, history):
+    current_utterance = 'user: {instruction} assistant: '.format(instruction=input)
+    if history:
+        instruction = history + ' ' + current_utterance
+    else:
+        instruction = current_utterance
+    prompt = prompter.generate_prompt(instruction)
+    print('prompt: ' + prompt)
+    inputs = tokenizer(prompt, return_tensors="pt")
+    input_ids = inputs["input_ids"].to(device)
+    generation_config = GenerationConfig(
+        max_new_tokens=max_new_tokens,
+        num_beams=num_beams,
+        do_sample=do_sample,
+        temperature=temperature,
+        top_p=top_p
+    )
+    with torch.no_grad():
+        generation_output = model.generate(
+            input_ids=input_ids,
+            generation_config=generation_config,
+            return_dict_in_generate=True,
+            output_scores=True,
+        )
+    s = generation_output.sequences[0]
+    output = tokenizer.decode(s)
+    response = output[len(prompt):]
+
+    chatbot.append((parse_text(input), parse_text(response)))
+    history = instruction + response
     return chatbot, history
 
 
@@ -71,11 +141,12 @@ def reset_user_input():
 
 
 def reset_state():
-    return [], []
+    return [], ''
 
 
 with gr.Blocks() as demo:
-    gr.HTML("""<h1 align="center">ChatGLM</h1>""")
+    gr.HTML("""<h1 align="center">Multi-turn Alpaca</h1>""")
+    gr.HTML("""<h1 align="center">GitHub: https://github.com/l294265421/multi-turn-alpaca</h1>""")
 
     chatbot = gr.Chatbot()
     with gr.Row():
@@ -87,13 +158,18 @@ with gr.Blocks() as demo:
                 submitBtn = gr.Button("Submit", variant="primary")
         with gr.Column(scale=1):
             emptyBtn = gr.Button("Clear History")
-            max_length = gr.Slider(0, 4096, value=2048, step=1.0, label="Maximum length", interactive=True)
-            top_p = gr.Slider(0, 1, value=0.7, step=0.01, label="Top P", interactive=True)
+            max_new_tokens = gr.Slider(0, 4096, value=2048, step=1.0, label="Maximum Token Number", interactive=True)
+            num_beams = gr.components.Slider(
+                minimum=1, maximum=4, step=1, value=4, label="Beams"
+            )
+            do_sample = gr.components.Checkbox(value=False, label='Do sample')
             temperature = gr.Slider(0, 1, value=0.95, step=0.01, label="Temperature", interactive=True)
+            top_p = gr.Slider(0, 1, value=0.7, step=0.01, label="Top P", interactive=True)
 
-    history = gr.State([])
-
-    submitBtn.click(predict, [user_input, chatbot, max_length, top_p, temperature, history], [chatbot, history],
+    history = gr.State('')
+    # input, chatbot, max_new_tokens, num_beams, do_sample, temperature, top_p, history
+    submitBtn.click(predict, [user_input, chatbot, max_new_tokens, num_beams, do_sample, temperature, top_p, history],
+                    [chatbot, history],
                     show_progress=True)
     submitBtn.click(reset_user_input, [], [user_input])
 
@@ -101,5 +177,5 @@ with gr.Blocks() as demo:
 
 
 server_name = '0.0.0.0'
-share_gradio = False
+share_gradio = True
 demo.queue().launch(server_name=server_name, share=share_gradio, inbrowser=True)

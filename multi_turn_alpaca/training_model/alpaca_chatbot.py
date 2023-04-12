@@ -152,16 +152,17 @@ with gr.Blocks() as demo:
     with gr.Row():
         with gr.Column(scale=4):
             with gr.Column(scale=12):
-                user_input = gr.Textbox(show_label=False, placeholder="Input...", lines=10).style(
+                user_input = gr.Textbox(show_label=False, placeholder="Input...", lines=7).style(
                     container=False)
             with gr.Column(min_width=32, scale=1):
                 submitBtn = gr.Button("Submit", variant="primary")
         with gr.Column(scale=1):
             emptyBtn = gr.Button("Clear History")
-            max_new_tokens = gr.Slider(0, 4096, value=2048, step=1.0, label="Maximum Token Number", interactive=True)
+            max_new_tokens = gr.Slider(0, 1024, value=128, step=1.0, label="Maximum Token Number", interactive=True)
             num_beams = gr.components.Slider(
                 minimum=1, maximum=4, step=1, value=4, label="Beams"
             )
+        with gr.Column(scale=1):
             do_sample = gr.components.Checkbox(value=False, label='Do sample')
             temperature = gr.Slider(0, 1, value=0.95, step=0.01, label="Temperature", interactive=True)
             top_p = gr.Slider(0, 1, value=0.7, step=0.01, label="Top P", interactive=True)

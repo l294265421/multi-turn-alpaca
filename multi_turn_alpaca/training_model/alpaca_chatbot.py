@@ -160,7 +160,7 @@ with gr.Blocks() as demo:
             emptyBtn = gr.Button("Clear History")
             max_new_tokens = gr.Slider(0, 1024, value=128, step=1.0, label="Maximum Token Number", interactive=True)
             num_beams = gr.components.Slider(
-                minimum=1, maximum=4, step=1, value=4, label="Beams"
+                minimum=1, maximum=4, step=1, value=1, label="Beams"
             )
         with gr.Column(scale=1):
             do_sample = gr.components.Checkbox(value=False, label='Do sample')

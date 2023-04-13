@@ -16,3 +16,5 @@ Multi-turn alpaca is an extension of stanford alpaca and supports multi-turn dia
 ## Datasets
 - [ChatAlpaca](https://github.com/cascip/ChatAlpaca)
 - [AlpacaDataCleaned](https://github.com/gururise/AlpacaDataCleaned)
+- [CDial-GPT](https://github.com/thu-coai/CDial-GPT)
+    - 2020-NLPCC-A Large-Scale Chinese Short-Text Conversation Dataset [[paper](https://arxiv.org/abs/2008.03946)]

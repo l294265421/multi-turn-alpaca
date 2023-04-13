@@ -12,6 +12,16 @@ Multi-turn alpaca is an extension of stanford alpaca and supports multi-turn dia
 - [inference](multi_turn_alpaca/training_model/alpaca_chatbot.py)
     - sh run.sh multi_turn_alpaca/training_model/alpaca_chatbot.py
     ![](./figures/dialogue_interface.png)
+    
+## Cases
+### code
+![](./figures/code.png)
+
+### math
+![](./figures/math.png)
+
+### translation
+![](./figures/translation.png)
 
 ## Datasets
 - [ChatAlpaca](https://github.com/cascip/ChatAlpaca)

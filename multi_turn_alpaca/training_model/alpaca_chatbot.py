@@ -179,4 +179,7 @@ with gr.Blocks() as demo:
 
 server_name = '0.0.0.0'
 share_gradio = True
-demo.queue().launch(server_name=server_name, share=share_gradio, inbrowser=True)
+result = demo.queue().launch(server_name=server_name, share=share_gradio, prevent_thread_lock=True)
+print('result:')
+print(result[2], flush=True)
+demo.block_thread()

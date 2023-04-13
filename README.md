@@ -30,3 +30,5 @@ Multi-turn alpaca is an extension of stanford alpaca and supports multi-turn dia
     - 2020-NLPCC-A Large-Scale Chinese Short-Text Conversation Dataset [[paper](https://arxiv.org/abs/2008.03946)]
 - [dailydialog](http://yanran.li/dailydialog)
     - 2017-IJCNLP-Dailydialog: A manually labelled multi-turn dialogue dataset
+- BELLE
+    - [BelleGroup/generated_chat_0.4M](https://huggingface.co/datasets/BelleGroup/generated_chat_0.4M)

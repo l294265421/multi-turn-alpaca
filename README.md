@@ -1,5 +1,5 @@
 # multi-turn-alpaca
-Multi-turn alpaca is an extension of stanford alpaca and supports multi-turn dialogue. Multi-turn alpaca is trained on original alpaca data [AlpacaDataCleaned](https://github.com/gururise/AlpacaDataCleaned) and multi-turn data [ChatAlpaca](https://github.com/cascip/ChatAlpaca).
+Multi-turn alpaca is an extension of stanford alpaca and supports multi-turn dialogue. Multi-turn alpaca is trained on original alpaca data [AlpacaDataCleaned](https://github.com/gururise/AlpacaDataCleaned) and multi-turn data [ChatAlpaca](https://github.com/cascip/ChatAlpaca). 
 
 ## Prapare Data
 - [process_alpaca_data_cleaned](multi_turn_alpaca/prepare_data/process_alpaca_data_cleaned.py)
@@ -11,17 +11,18 @@ Multi-turn alpaca is an extension of stanford alpaca and supports multi-turn dia
   - nohup sh run.sh multi_turn_alpaca/training_model/finetune.py > finetune.log 2>&1 &
 - [inference](multi_turn_alpaca/training_model/alpaca_chatbot.py)
     - nohup sh run.sh multi_turn_alpaca/training_model/alpaca_chatbot.py > alpaca_chatbot.log 2>&1 &
-    https://4a019d80892008c4aa.gradio.live/
-    ![](./figures/dialogue_interface.png)
     
 ## Cases
-### code
+# Chat
+![](./figures/chat.jpg)
+
+### Code
 ![](./figures/code.png)
 
-### math
+### Math
 ![](./figures/math.png)
 
-### translation
+### Translation
 ![](./figures/translation.png)
 
 ## Datasets

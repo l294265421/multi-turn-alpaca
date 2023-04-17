@@ -12,6 +12,10 @@ Multi-turn alpaca is an extension of stanford alpaca and supports multi-turn dia
   - nohup sh run.sh multi_turn_alpaca/training_model/finetune.py > finetune.log 2>&1 &
 - [inference](multi_turn_alpaca/training_model/alpaca_chatbot.py)
     - nohup sh run.sh multi_turn_alpaca/training_model/alpaca_chatbot.py > alpaca_chatbot.log 2>&1 &
+
+## Trained Weight
+- Lora权重
+  - [百度网盘](https://pan.baidu.com/s/1JmUI3Dz_YBFypnAvwWGavw?pwd=vr46)
     
 ## Cases
 # Chat

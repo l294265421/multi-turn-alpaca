@@ -146,7 +146,7 @@ def reset_state():
 
 with gr.Blocks() as demo:
     gr.HTML("""<h1 align="center">Multi-turn Alpaca (主要支持英文)</h1>""")
-    gr.HTML("""<h1 align="center">GitHub: https://github.com/l294265421/multi-turn-alpaca</h1>""")
+    gr.HTML("""<h1 align="center"><a href="https://github.com/l294265421/multi-turn-alpaca">GitHub</a></h1>""")
 
     chatbot = gr.Chatbot()
     with gr.Row():

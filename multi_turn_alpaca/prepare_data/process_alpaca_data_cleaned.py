@@ -10,6 +10,9 @@ if __name__ == '__main__':
     data = file_utils.load_json(filepath)
     output_lines = []
     for i, instance in enumerate(data):
+        instruction = "user: {instruction} {input} assistant: ".format_map(instance)
+        instance['instruction'] = instruction
+        instance['input'] = ''
         output_lines.append(json.dumps(instance))
 
     output_dir = os.path.join(common_path.data_dir, 'training_data')
